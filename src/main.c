@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>   // srand
+#include <time.h>     // time
 #include "grafo.h"
 
 #ifdef _WIN32
@@ -13,6 +15,7 @@ int main(void) {
 #endif
     int cargados;
 
+    srand(time(NULL));
     grafo_inicializar(&mundo, 100);
     cargados = grafo_cargar_nombres(&mundo, "data/lugares.txt");
 
@@ -23,5 +26,9 @@ int main(void) {
     printf("Se cargaron %d lugares\n", cargados);
     printf("Primero: %s\n", mundo.lugares[0].nombre);
     printf("Ultimo:  %s\n", mundo.lugares[cargados - 1].nombre);
+
+    grafo_generar_portales(&mundo, NORMAL);
+    printf("Portales: %d (se esperan ~%d)\n",
+           grafo_contar_portales(&mundo), mundo.n * (mundo.n - 1) / 10);
     return 0;
 }
