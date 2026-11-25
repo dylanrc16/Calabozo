@@ -5,6 +5,8 @@
 
 #define MAX_LUGARES 200
 #define SIN_PORTAL 0
+#define COSTO_MIN 1
+#define COSTO_MAX 10
 
 enum Densidad {
     MUY_ESCASA, ESCASA, NORMAL, DENSA, MUY_DENSA

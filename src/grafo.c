@@ -3,9 +3,6 @@
 #include <stdlib.h>   // rand
 #include "grafo.h"
 
-#define COSTO_MIN 1
-#define COSTO_MAX 10
-
 static int probabilidad_por_mil(enum Densidad d) {
     switch (d) {
         case MUY_ESCASA: return 20;    // p = 0.02
