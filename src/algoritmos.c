@@ -2,6 +2,7 @@
 #include "algoritmos.h"
 #include "pila.h"
 #include "unionfind.h"
+#include "monticulo.h"
 
 /* =====================================================
  * 1. DFS (BÚSQUEDA EN PROFUNDIDAD)
@@ -191,5 +192,89 @@ int reparar_conectividad(struct Grafo *g) {
 }
 
 /* =====================================================
- * 5. DIJKSTRA (pendiente)
+ * 5. DIJKSTRA (camino más corto)
+ *    - Siempre procesa el lugar pendiente más cercano
+ *      (lo da el MinHeap de monticulo.c).
+ *    - Relajar: si dist[actual] + costo < dist[vecino],
+ *      se encontró un camino mejor.
+ *    - Lazy deletion: si sale del montículo un lugar ya
+ *      terminado, es una copia vieja y se ignora.
+ *    - El camino se reconstruye con anterior[] y la Pila.
  * ===================================================== */
+
+void dijkstra(const struct Grafo *g, int origen,
+              int dist[], int anterior[]) {
+    static struct MinHeap monticulo;
+    int terminado[MAX_LUGARES];
+    int i, actual, d, vecino, nueva;
+
+    for (i = 0; i < g->n; i++) {
+        dist[i] = INFINITO;
+        anterior[i] = -1;
+        terminado[i] = 0;
+    }
+    dist[origen] = 0;
+    minheap_inicializar(&monticulo);
+    minheap_insertar(&monticulo, origen, 0);
+
+    while (minheap_extraer_min(&monticulo, &actual, &d)) {
+        if (terminado[actual]) continue;   // copia vieja: lazy deletion
+        terminado[actual] = 1;
+
+        // Relajar los portales de "actual"
+        for (vecino = 0; vecino < g->n; vecino++)
+            if (grafo_hay_portal(g, actual, vecino) && !terminado[vecino]) {
+                nueva = dist[actual] + g->costos[actual][vecino];
+                if (nueva < dist[vecino]) {
+                    dist[vecino] = nueva;
+                    anterior[vecino] = actual;
+                    minheap_insertar(&monticulo, vecino, nueva);
+                }
+            }
+    }
+}
+
+int dijkstra_camino(const int anterior[], int origen, int destino,
+                    int camino[]) {
+    struct Pila pila;
+    int actual = destino, largo = 0, lugar;
+
+    // Seguir anterior[] desde el destino hasta el origen
+    pila_inicializar(&pila);
+    while (actual != -1) {
+        pila_push(&pila, actual);
+        if (actual == origen) break;
+        actual = anterior[actual];
+    }
+    if (actual != origen) return 0;        // no hay camino
+
+    // La pila lo da vuelta: queda origen -> destino
+    while (pila_pop(&pila, &lugar)) {
+        camino[largo] = lugar;
+        largo++;
+    }
+    return largo;
+}
+
+int lugares_mas_cercanos(const struct Grafo *g, const int dist[],
+                         int origen, int cercanos[], int max) {
+    int elegido[MAX_LUGARES];
+    int i, k, mejor, cuantos = 0;
+
+    for (i = 0; i < g->n; i++) elegido[i] = 0;
+    elegido[origen] = 1;                   // el origen no cuenta
+
+    // Selection: buscar el menor "max" veces
+    for (k = 0; k < max; k++) {
+        mejor = -1;
+        for (i = 0; i < g->n; i++)
+            if (!elegido[i] && dist[i] < INFINITO &&
+                (mejor == -1 || dist[i] < dist[mejor]))
+                mejor = i;
+        if (mejor == -1) break;            // no quedan alcanzables
+        elegido[mejor] = 1;
+        cercanos[cuantos] = mejor;
+        cuantos++;
+    }
+    return cuantos;
+}
