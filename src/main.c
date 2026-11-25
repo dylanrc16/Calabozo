@@ -2,6 +2,7 @@
 #include <stdlib.h>   // srand
 #include <time.h>     // time
 #include "grafo.h"
+#include "algoritmos.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -14,6 +15,7 @@ int main(void) {
     SetConsoleOutputCP(CP_UTF8);
 #endif
     int cargados;
+    int grupo[MAX_LUGARES];
 
     srand(time(NULL));
     grafo_inicializar(&mundo, 100);
@@ -27,8 +29,12 @@ int main(void) {
     printf("Primero: %s\n", mundo.lugares[0].nombre);
     printf("Ultimo:  %s\n", mundo.lugares[cargados - 1].nombre);
 
-    grafo_generar_portales(&mundo, NORMAL);
-    printf("Portales: %d (se esperan ~%d)\n",
-           grafo_contar_portales(&mundo), mundo.n * (mundo.n - 1) / 10);
+    grafo_generar_portales(&mundo, MUY_ESCASA);
+    printf("Portales: %d\n", grafo_contar_portales(&mundo));
+    printf("Grupos antes: %d\n", kosaraju(&mundo, grupo));
+    printf("Portales agregados: %d\n", reparar_conectividad(&mundo));
+    printf("Grupos despues: %d\n", kosaraju(&mundo, grupo));
+    printf("Bien conectado: %s\n",
+           es_fuertemente_conexo(&mundo) ? "si" : "no");
     return 0;
 }
